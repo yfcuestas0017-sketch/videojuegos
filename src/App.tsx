@@ -416,11 +416,19 @@ const Proyectos = () => {
       try {
         setLoading(true);
         const response = await fetch('/api/notion-projects');
-        if (!response.ok) {
-          const errData = await response.json();
-          throw new Error(errData.error || 'Error fetching from Notion');
+        
+        // Verifica si la respuesta es JSON antes de parsear
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          throw new Error('La respuesta del servidor no es JSON. Es posible que el servidor de Notion no esté configurado correctamente o la ruta sea incorrecta.');
         }
+
         const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Error fetching from Notion');
+        }
+        
         setProjects(data);
       } catch (err: any) {
         console.error(err);
