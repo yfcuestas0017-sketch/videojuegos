@@ -417,21 +417,24 @@ const Proyectos = () => {
         setLoading(true);
         const response = await fetch('/api/notion-projects');
         
-        // Verifica si la respuesta es JSON antes de parsear
         const contentType = response.headers.get("content-type");
-        if (!contentType || !contentType.includes("application/json")) {
-          throw new Error('La respuesta del servidor no es JSON. Es posible que el servidor de Notion no esté configurado correctamente o la ruta sea incorrecta.');
+        const isJson = contentType && contentType.includes("application/json");
+
+        if (!isJson) {
+          const text = await response.text();
+          console.error('Respuesta no-JSON recibida:', text);
+          throw new Error(`El servidor devolvió un error (formato ${contentType}). Es probable que la ruta /api/notion-projects no esté disponible en Vercel.`);
         }
 
         const data = await response.json();
         
         if (!response.ok) {
-          throw new Error(data.error || 'Error fetching from Notion');
+          throw new Error(data.error || `Error del servidor (Status: ${response.status})`);
         }
         
         setProjects(data);
       } catch (err: any) {
-        console.error(err);
+        console.error('Error al cargar proyectos:', err);
         setError(err.message);
       } finally {
         setLoading(false);
